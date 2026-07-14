@@ -1,45 +1,50 @@
-# [Project name]
+# Ledger — Personal Budget Tracker
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A personal budgeting web app for tracking income, expenses, accounts, and budget goals.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Frontend: `pnpm --filter @workspace/budget-app run dev` (port from workflow)
+- API: `cd artifacts/api-server && uvicorn python.main:app --host 0.0.0.0 --port 8080 --reload`
+- Codegen: `pnpm --filter @workspace/api-spec run codegen`
+- Full typecheck: `pnpm run typecheck`
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Frontend: React + Vite + Tailwind + shadcn/ui + Recharts + wouter + TanStack Query
+- Backend: Python FastAPI + SQLAlchemy + psycopg2 (PostgreSQL)
+- DB: PostgreSQL (Replit managed)
+- API contract: OpenAPI spec → Orval codegen (React Query hooks + Zod schemas)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — API contract (source of truth)
+- `artifacts/budget-app/src/` — React frontend
+- `artifacts/api-server/python/` — Python FastAPI backend
+- `artifacts/api-server/python/main.py` — FastAPI app entrypoint
+- `artifacts/api-server/python/models.py` — SQLAlchemy models
+- `artifacts/api-server/python/routers/` — Route handlers (accounts, categories, transactions, budgets, summary)
+- `lib/api-client-react/src/generated/` — Generated React Query hooks
+- `lib/api-zod/src/generated/` — Generated Zod validation schemas
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Python FastAPI backend replaces the default Node.js/Express server for the budget app routes. The artifact.toml for api-server runs uvicorn via a shell command.
+- SQLAlchemy ORM with PostgreSQL. Tables auto-created at startup via `Base.metadata.create_all`.
+- OpenAPI spec is still the source of truth — codegen produces typed hooks for the frontend. Backend uses its own Pydantic schemas (manually kept in sync with the spec).
+- FastAPI runs at `/api/*` via the shared proxy. Frontend at `/`.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Dashboard with balance overview, spending by category (pie chart), 6-month income/expense trend, budget vs actual, recent transactions
+- Transactions: list, filter by month/account/category/type, CRUD
+- Accounts: checking/savings/credit/cash/investment accounts with balances
+- Budgets: monthly category budgets with progress tracking
+- Categories: custom income/expense categories with color and icon
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Google Fonts `@import url()` must be the very first line in `index.css` — before all other imports
+- When filtering `Date` columns in SQLAlchemy, use `cast(Column, String)` not `.cast(str)` (Python type vs SQLAlchemy type)
+- Backend uses `uvicorn` with `--reload` in dev; Python path must be set from `artifacts/api-server/` dir
+- After any OpenAPI spec change, run `pnpm --filter @workspace/api-spec run codegen` before frontend dev
