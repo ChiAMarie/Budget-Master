@@ -3,12 +3,9 @@
  * Do not edit manually.
  * Api
  * Personal Budget Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
-export interface BudgetInput {
+export interface TransactionCategoryInput {
   category_id: number;
-  month: string;
-  /** @minimum 0.01 */
-  limit_amount: number;
 }

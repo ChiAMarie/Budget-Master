@@ -3,14 +3,13 @@
  * Do not edit manually.
  * Api
  * Personal Budget Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface OverviewSummary {
-  total_balance: number;
+  monthly_spend: number;
   monthly_income: number;
-  monthly_expenses: number;
-  net_savings: number;
+  net: number;
   transaction_count: number;
-  month?: string;
+  month: string;
 }

@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from typing import List, Optional
+from datetime import datetime, timezone
 from .. import models, schemas
 from ..database import get_db
 
@@ -63,3 +65,35 @@ def get_transaction(id: int, db: Session = Depends(get_db)):
     if not tx:
         raise HTTPException(status_code=404, detail="Transaction not found")
     return _enrich(tx)
+
+
+@router.patch("/{id}/category", response_model=schemas.TransactionCategory)
+def recategorize_transaction(
+    id: int,
+    data: schemas.TransactionCategoryInput,
+    db: Session = Depends(get_db),
+):
+    tx = db.query(models.Transaction).filter(models.Transaction.id == id).first()
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    tc = db.query(models.TransactionCategory).filter(
+        models.TransactionCategory.transaction_id == id
+    ).first()
+
+    if tc:
+        tc.category_id = data.category_id
+        tc.source = "manual"
+        tc.rule_id = None
+        tc.updated_at = datetime.now(timezone.utc)
+    else:
+        tc = models.TransactionCategory(
+            transaction_id=id,
+            category_id=data.category_id,
+            source="manual",
+        )
+        db.add(tc)
+
+    db.commit()
+    db.refresh(tc)
+    return tc

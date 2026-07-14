@@ -3,14 +3,13 @@
  * Do not edit manually.
  * Api
  * Personal Budget Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
-import type { AccountUpdateType } from './accountUpdateType';
 
 export interface AccountUpdate {
-  /** @minLength 1 */
   name?: string;
-  type?: AccountUpdateType;
-  balance?: number;
-  color?: string;
+  /** @nullable */
+  institution?: string | null;
+  /** @nullable */
+  last4?: string | null;
 }

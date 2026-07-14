@@ -3,9 +3,8 @@
  * Do not edit manually.
  * Api
  * Personal Budget Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
-import type { ListTransactionsType } from './listTransactionsType';
 
 export type ListTransactionsParams = {
 /**
@@ -13,13 +12,10 @@ export type ListTransactionsParams = {
  */
 account_id?: number | null;
 /**
+ * Filter by flow type: spend | income | card_payment | transfer | fee | investment | savings
  * @nullable
  */
-category_id?: number | null;
-/**
- * @nullable
- */
-type?: ListTransactionsType;
+flow_type?: string | null;
 /**
  * Filter by month (YYYY-MM)
  * @nullable

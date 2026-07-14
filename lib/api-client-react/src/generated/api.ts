@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Personal Budget Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import {
   useMutation,
@@ -21,16 +21,11 @@ import type {
 
 import type {
   Account,
-  AccountInput,
   AccountUpdate,
-  Budget,
-  BudgetInput,
-  BudgetUpdate,
+  BudgetRow,
   BudgetVsActual,
   Category,
-  CategoryInput,
   CategorySpending,
-  CategoryUpdate,
   GetBudgetVsActualParams,
   GetSpendingByCategoryParams,
   GetSummaryOverviewParams,
@@ -40,8 +35,8 @@ import type {
   MonthlyTrend,
   OverviewSummary,
   Transaction,
-  TransactionInput,
-  TransactionUpdate
+  TransactionCategory,
+  TransactionCategoryInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -65,7 +60,6 @@ export const getHealthCheckUrl = () => {
 }
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const healthCheck = async ( options?: RequestInit): Promise<HealthStatus> => {
@@ -143,7 +137,7 @@ export const getListAccountsUrl = () => {
 }
 
 /**
- * @summary List all accounts
+ * @summary List all active accounts
  */
 export const listAccounts = async ( options?: RequestInit): Promise<Account[]> => {
 
@@ -190,7 +184,7 @@ export type ListAccountsQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List all accounts
+ * @summary List all active accounts
  */
 
 export function useListAccounts<TData = Awaited<ReturnType<typeof listAccounts>>, TError = ErrorType<unknown>>(
@@ -210,77 +204,6 @@ export function useListAccounts<TData = Awaited<ReturnType<typeof listAccounts>>
 
 
 
-
-export const getCreateAccountUrl = () => {
-
-
-
-
-  return `/api/accounts`
-}
-
-/**
- * @summary Create a new account
- */
-export const createAccount = async (accountInput: AccountInput, options?: RequestInit): Promise<Account> => {
-
-  return customFetch<Account>(getCreateAccountUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      accountInput,)
-  }
-);}
-
-
-
-
-export const getCreateAccountMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccount>>, TError,{data: BodyType<AccountInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createAccount>>, TError,{data: BodyType<AccountInput>}, TContext> => {
-
-const mutationKey = ['createAccount'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAccount>>, {data: BodyType<AccountInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  createAccount(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreateAccountMutationResult = NonNullable<Awaited<ReturnType<typeof createAccount>>>
-    export type CreateAccountMutationBody = BodyType<AccountInput>
-    export type CreateAccountMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a new account
- */
-export const useCreateAccount = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccount>>, TError,{data: BodyType<AccountInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof createAccount>>,
-        TError,
-        {data: BodyType<AccountInput>},
-        TContext
-      > => {
-      return useMutation(getCreateAccountMutationOptions(options));
-    }
 
 export const getGetAccountUrl = (id: number,) => {
 
@@ -368,7 +291,7 @@ export const getUpdateAccountUrl = (id: number,) => {
 }
 
 /**
- * @summary Update account
+ * @summary Update editable account fields (name, institution, last4)
  */
 export const updateAccount = async (id: number,
     accountUpdate: AccountUpdate, options?: RequestInit): Promise<Account> => {
@@ -418,7 +341,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateAccountMutationError = ErrorType<void>
 
     /**
- * @summary Update account
+ * @summary Update editable account fields (name, institution, last4)
  */
 export const useUpdateAccount = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAccount>>, TError,{id: number;data: BodyType<AccountUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -431,76 +354,6 @@ export const useUpdateAccount = <TError = ErrorType<void>,
       return useMutation(getUpdateAccountMutationOptions(options));
     }
 
-export const getDeleteAccountUrl = (id: number,) => {
-
-
-
-
-  return `/api/accounts/${id}`
-}
-
-/**
- * @summary Delete account
- */
-export const deleteAccount = async (id: number, options?: RequestInit): Promise<void> => {
-
-  return customFetch<void>(getDeleteAccountUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-export const getDeleteAccountMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAccount>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteAccount>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['deleteAccount'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAccount>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  deleteAccount(id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteAccountMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAccount>>>
-
-    export type DeleteAccountMutationError = ErrorType<void>
-
-    /**
- * @summary Delete account
- */
-export const useDeleteAccount = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAccount>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof deleteAccount>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getDeleteAccountMutationOptions(options));
-    }
-
 export const getListCategoriesUrl = () => {
 
 
@@ -510,7 +363,7 @@ export const getListCategoriesUrl = () => {
 }
 
 /**
- * @summary List all categories
+ * @summary List all categories ordered by tier and sort_order
  */
 export const listCategories = async ( options?: RequestInit): Promise<Category[]> => {
 
@@ -557,7 +410,7 @@ export type ListCategoriesQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List all categories
+ * @summary List all categories ordered by tier and sort_order
  */
 
 export function useListCategories<TData = Awaited<ReturnType<typeof listCategories>>, TError = ErrorType<unknown>>(
@@ -578,78 +431,7 @@ export function useListCategories<TData = Awaited<ReturnType<typeof listCategori
 
 
 
-export const getCreateCategoryUrl = () => {
-
-
-
-
-  return `/api/categories`
-}
-
-/**
- * @summary Create a new category
- */
-export const createCategory = async (categoryInput: CategoryInput, options?: RequestInit): Promise<Category> => {
-
-  return customFetch<Category>(getCreateCategoryUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      categoryInput,)
-  }
-);}
-
-
-
-
-export const getCreateCategoryMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCategory>>, TError,{data: BodyType<CategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createCategory>>, TError,{data: BodyType<CategoryInput>}, TContext> => {
-
-const mutationKey = ['createCategory'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCategory>>, {data: BodyType<CategoryInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  createCategory(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreateCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof createCategory>>>
-    export type CreateCategoryMutationBody = BodyType<CategoryInput>
-    export type CreateCategoryMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a new category
- */
-export const useCreateCategory = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCategory>>, TError,{data: BodyType<CategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof createCategory>>,
-        TError,
-        {data: BodyType<CategoryInput>},
-        TContext
-      > => {
-      return useMutation(getCreateCategoryMutationOptions(options));
-    }
-
-export const getUpdateCategoryUrl = (id: number,) => {
+export const getGetCategoryUrl = (id: number,) => {
 
 
 
@@ -658,138 +440,73 @@ export const getUpdateCategoryUrl = (id: number,) => {
 }
 
 /**
- * @summary Update category
+ * @summary Get category by ID
  */
-export const updateCategory = async (id: number,
-    categoryUpdate: CategoryUpdate, options?: RequestInit): Promise<Category> => {
+export const getCategory = async (id: number, options?: RequestInit): Promise<Category> => {
 
-  return customFetch<Category>(getUpdateCategoryUrl(id),
+  return customFetch<Category>(getGetCategoryUrl(id),
   {
     ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      categoryUpdate,)
+    method: 'GET'
+
+
   }
 );}
 
 
 
 
-export const getUpdateCategoryMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCategory>>, TError,{id: number;data: BodyType<CategoryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateCategory>>, TError,{id: number;data: BodyType<CategoryUpdate>}, TContext> => {
 
-const mutationKey = ['updateCategory'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCategory>>, {id: number;data: BodyType<CategoryUpdate>}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  updateCategory(id,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof updateCategory>>>
-    export type UpdateCategoryMutationBody = BodyType<CategoryUpdate>
-    export type UpdateCategoryMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update category
- */
-export const useUpdateCategory = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCategory>>, TError,{id: number;data: BodyType<CategoryUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof updateCategory>>,
-        TError,
-        {id: number;data: BodyType<CategoryUpdate>},
-        TContext
-      > => {
-      return useMutation(getUpdateCategoryMutationOptions(options));
+export const getGetCategoryQueryKey = (id: number,) => {
+    return [
+    `/api/categories/${id}`
+    ] as const;
     }
 
-export const getDeleteCategoryUrl = (id: number,) => {
+
+export const getGetCategoryQueryOptions = <TData = Awaited<ReturnType<typeof getCategory>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCategory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCategoryQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCategory>>> = ({ signal }) => getCategory(id, { signal, ...requestOptions });
 
 
 
 
-  return `/api/categories/${id}`
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCategory>>, TError, TData> & { queryKey: QueryKey }
 }
 
+export type GetCategoryQueryResult = NonNullable<Awaited<ReturnType<typeof getCategory>>>
+export type GetCategoryQueryError = ErrorType<void>
+
+
 /**
- * @summary Delete category
+ * @summary Get category by ID
  */
-export const deleteCategory = async (id: number, options?: RequestInit): Promise<void> => {
 
-  return customFetch<void>(getDeleteCategoryUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
+export function useGetCategory<TData = Awaited<ReturnType<typeof getCategory>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCategory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  }
-);}
+  const queryOptions = getGetCategoryQueryOptions(id,options)
 
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
-
-
-export const getDeleteCategoryMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCategory>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteCategory>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['deleteCategory'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCategory>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  deleteCategory(id,requestOptions)
-        }
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCategory>>>
-
-    export type DeleteCategoryMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete category
- */
-export const useDeleteCategory = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCategory>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof deleteCategory>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getDeleteCategoryMutationOptions(options));
-    }
 
 export const getListTransactionsUrl = (params?: ListTransactionsParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -875,77 +592,6 @@ export function useListTransactions<TData = Awaited<ReturnType<typeof listTransa
 
 
 
-export const getCreateTransactionUrl = () => {
-
-
-
-
-  return `/api/transactions`
-}
-
-/**
- * @summary Create a transaction
- */
-export const createTransaction = async (transactionInput: TransactionInput, options?: RequestInit): Promise<Transaction> => {
-
-  return customFetch<Transaction>(getCreateTransactionUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      transactionInput,)
-  }
-);}
-
-
-
-
-export const getCreateTransactionMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTransaction>>, TError,{data: BodyType<TransactionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createTransaction>>, TError,{data: BodyType<TransactionInput>}, TContext> => {
-
-const mutationKey = ['createTransaction'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTransaction>>, {data: BodyType<TransactionInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  createTransaction(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreateTransactionMutationResult = NonNullable<Awaited<ReturnType<typeof createTransaction>>>
-    export type CreateTransactionMutationBody = BodyType<TransactionInput>
-    export type CreateTransactionMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create a transaction
- */
-export const useCreateTransaction = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTransaction>>, TError,{data: BodyType<TransactionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof createTransaction>>,
-        TError,
-        {data: BodyType<TransactionInput>},
-        TContext
-      > => {
-      return useMutation(getCreateTransactionMutationOptions(options));
-    }
-
 export const getGetTransactionUrl = (id: number,) => {
 
 
@@ -1023,38 +669,38 @@ export function useGetTransaction<TData = Awaited<ReturnType<typeof getTransacti
 
 
 
-export const getUpdateTransactionUrl = (id: number,) => {
+export const getRecategorizeTransactionUrl = (id: number,) => {
 
 
 
 
-  return `/api/transactions/${id}`
+  return `/api/transactions/${id}/category`
 }
 
 /**
- * @summary Update a transaction
+ * @summary Set or update the category for a transaction (the only permitted transaction mutation)
  */
-export const updateTransaction = async (id: number,
-    transactionUpdate: TransactionUpdate, options?: RequestInit): Promise<Transaction> => {
+export const recategorizeTransaction = async (id: number,
+    transactionCategoryInput: TransactionCategoryInput, options?: RequestInit): Promise<TransactionCategory> => {
 
-  return customFetch<Transaction>(getUpdateTransactionUrl(id),
+  return customFetch<TransactionCategory>(getRecategorizeTransactionUrl(id),
   {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      transactionUpdate,)
+      transactionCategoryInput,)
   }
 );}
 
 
 
 
-export const getUpdateTransactionMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTransaction>>, TError,{id: number;data: BodyType<TransactionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateTransaction>>, TError,{id: number;data: BodyType<TransactionUpdate>}, TContext> => {
+export const getRecategorizeTransactionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recategorizeTransaction>>, TError,{id: number;data: BodyType<TransactionCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recategorizeTransaction>>, TError,{id: number;data: BodyType<TransactionCategoryInput>}, TContext> => {
 
-const mutationKey = ['updateTransaction'];
+const mutationKey = ['recategorizeTransaction'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1064,10 +710,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTransaction>>, {id: number;data: BodyType<TransactionUpdate>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recategorizeTransaction>>, {id: number;data: BodyType<TransactionCategoryInput>}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  updateTransaction(id,data,requestOptions)
+          return  recategorizeTransaction(id,data,requestOptions)
         }
 
 
@@ -1077,92 +723,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UpdateTransactionMutationResult = NonNullable<Awaited<ReturnType<typeof updateTransaction>>>
-    export type UpdateTransactionMutationBody = BodyType<TransactionUpdate>
-    export type UpdateTransactionMutationError = ErrorType<void>
+    export type RecategorizeTransactionMutationResult = NonNullable<Awaited<ReturnType<typeof recategorizeTransaction>>>
+    export type RecategorizeTransactionMutationBody = BodyType<TransactionCategoryInput>
+    export type RecategorizeTransactionMutationError = ErrorType<void>
 
     /**
- * @summary Update a transaction
+ * @summary Set or update the category for a transaction (the only permitted transaction mutation)
  */
-export const useUpdateTransaction = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTransaction>>, TError,{id: number;data: BodyType<TransactionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useRecategorizeTransaction = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recategorizeTransaction>>, TError,{id: number;data: BodyType<TransactionCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof updateTransaction>>,
+        Awaited<ReturnType<typeof recategorizeTransaction>>,
         TError,
-        {id: number;data: BodyType<TransactionUpdate>},
+        {id: number;data: BodyType<TransactionCategoryInput>},
         TContext
       > => {
-      return useMutation(getUpdateTransactionMutationOptions(options));
-    }
-
-export const getDeleteTransactionUrl = (id: number,) => {
-
-
-
-
-  return `/api/transactions/${id}`
-}
-
-/**
- * @summary Delete a transaction
- */
-export const deleteTransaction = async (id: number, options?: RequestInit): Promise<void> => {
-
-  return customFetch<void>(getDeleteTransactionUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-export const getDeleteTransactionMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTransaction>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteTransaction>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['deleteTransaction'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTransaction>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  deleteTransaction(id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteTransactionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTransaction>>>
-
-    export type DeleteTransactionMutationError = ErrorType<void>
-
-    /**
- * @summary Delete a transaction
- */
-export const useDeleteTransaction = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTransaction>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof deleteTransaction>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getDeleteTransactionMutationOptions(options));
+      return useMutation(getRecategorizeTransactionMutationOptions(options));
     }
 
 export const getListBudgetsUrl = (params?: ListBudgetsParams,) => {
@@ -1181,11 +757,11 @@ export const getListBudgetsUrl = (params?: ListBudgetsParams,) => {
 }
 
 /**
- * @summary List all budgets
+ * @summary List budget targets for a scenario with actual spend for the current calendar month
  */
-export const listBudgets = async (params?: ListBudgetsParams, options?: RequestInit): Promise<Budget[]> => {
+export const listBudgets = async (params?: ListBudgetsParams, options?: RequestInit): Promise<BudgetRow[]> => {
 
-  return customFetch<Budget[]>(getListBudgetsUrl(params),
+  return customFetch<BudgetRow[]>(getListBudgetsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -1228,7 +804,7 @@ export type ListBudgetsQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List all budgets
+ * @summary List budget targets for a scenario with actual spend for the current calendar month
  */
 
 export function useListBudgets<TData = Awaited<ReturnType<typeof listBudgets>>, TError = ErrorType<unknown>>(
@@ -1249,219 +825,6 @@ export function useListBudgets<TData = Awaited<ReturnType<typeof listBudgets>>, 
 
 
 
-export const getCreateBudgetUrl = () => {
-
-
-
-
-  return `/api/budgets`
-}
-
-/**
- * @summary Create or update a budget for a category/month
- */
-export const createBudget = async (budgetInput: BudgetInput, options?: RequestInit): Promise<Budget> => {
-
-  return customFetch<Budget>(getCreateBudgetUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      budgetInput,)
-  }
-);}
-
-
-
-
-export const getCreateBudgetMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBudget>>, TError,{data: BodyType<BudgetInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createBudget>>, TError,{data: BodyType<BudgetInput>}, TContext> => {
-
-const mutationKey = ['createBudget'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBudget>>, {data: BodyType<BudgetInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  createBudget(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreateBudgetMutationResult = NonNullable<Awaited<ReturnType<typeof createBudget>>>
-    export type CreateBudgetMutationBody = BodyType<BudgetInput>
-    export type CreateBudgetMutationError = ErrorType<unknown>
-
-    /**
- * @summary Create or update a budget for a category/month
- */
-export const useCreateBudget = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBudget>>, TError,{data: BodyType<BudgetInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof createBudget>>,
-        TError,
-        {data: BodyType<BudgetInput>},
-        TContext
-      > => {
-      return useMutation(getCreateBudgetMutationOptions(options));
-    }
-
-export const getUpdateBudgetUrl = (id: number,) => {
-
-
-
-
-  return `/api/budgets/${id}`
-}
-
-/**
- * @summary Update a budget limit
- */
-export const updateBudget = async (id: number,
-    budgetUpdate: BudgetUpdate, options?: RequestInit): Promise<Budget> => {
-
-  return customFetch<Budget>(getUpdateBudgetUrl(id),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      budgetUpdate,)
-  }
-);}
-
-
-
-
-export const getUpdateBudgetMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBudget>>, TError,{id: number;data: BodyType<BudgetUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateBudget>>, TError,{id: number;data: BodyType<BudgetUpdate>}, TContext> => {
-
-const mutationKey = ['updateBudget'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBudget>>, {id: number;data: BodyType<BudgetUpdate>}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  updateBudget(id,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateBudgetMutationResult = NonNullable<Awaited<ReturnType<typeof updateBudget>>>
-    export type UpdateBudgetMutationBody = BodyType<BudgetUpdate>
-    export type UpdateBudgetMutationError = ErrorType<unknown>
-
-    /**
- * @summary Update a budget limit
- */
-export const useUpdateBudget = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBudget>>, TError,{id: number;data: BodyType<BudgetUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof updateBudget>>,
-        TError,
-        {id: number;data: BodyType<BudgetUpdate>},
-        TContext
-      > => {
-      return useMutation(getUpdateBudgetMutationOptions(options));
-    }
-
-export const getDeleteBudgetUrl = (id: number,) => {
-
-
-
-
-  return `/api/budgets/${id}`
-}
-
-/**
- * @summary Delete a budget
- */
-export const deleteBudget = async (id: number, options?: RequestInit): Promise<void> => {
-
-  return customFetch<void>(getDeleteBudgetUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-export const getDeleteBudgetMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBudget>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteBudget>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['deleteBudget'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBudget>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  deleteBudget(id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteBudgetMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBudget>>>
-
-    export type DeleteBudgetMutationError = ErrorType<unknown>
-
-    /**
- * @summary Delete a budget
- */
-export const useDeleteBudget = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBudget>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof deleteBudget>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getDeleteBudgetMutationOptions(options));
-    }
-
 export const getGetSummaryOverviewUrl = (params?: GetSummaryOverviewParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -1478,7 +841,7 @@ export const getGetSummaryOverviewUrl = (params?: GetSummaryOverviewParams,) => 
 }
 
 /**
- * @summary Dashboard overview — total balance, income, expenses for current month
+ * @summary Monthly spend (flow_type=spend) and income (flow_type=income) totals
  */
 export const getSummaryOverview = async (params?: GetSummaryOverviewParams, options?: RequestInit): Promise<OverviewSummary> => {
 
@@ -1525,7 +888,7 @@ export type GetSummaryOverviewQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Dashboard overview — total balance, income, expenses for current month
+ * @summary Monthly spend (flow_type=spend) and income (flow_type=income) totals
  */
 
 export function useGetSummaryOverview<TData = Awaited<ReturnType<typeof getSummaryOverview>>, TError = ErrorType<unknown>>(
@@ -1562,7 +925,7 @@ export const getGetSpendingByCategoryUrl = (params?: GetSpendingByCategoryParams
 }
 
 /**
- * @summary Spending breakdown by category for a given month
+ * @summary Spend breakdown by category (flow_type=spend) for a given month
  */
 export const getSpendingByCategory = async (params?: GetSpendingByCategoryParams, options?: RequestInit): Promise<CategorySpending[]> => {
 
@@ -1609,7 +972,7 @@ export type GetSpendingByCategoryQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Spending breakdown by category for a given month
+ * @summary Spend breakdown by category (flow_type=spend) for a given month
  */
 
 export function useGetSpendingByCategory<TData = Awaited<ReturnType<typeof getSpendingByCategory>>, TError = ErrorType<unknown>>(
@@ -1639,7 +1002,7 @@ export const getGetMonthlyTrendUrl = () => {
 }
 
 /**
- * @summary Monthly income vs expense trend for the last 6 months
+ * @summary Monthly income vs spend trend for the last 6 months
  */
 export const getMonthlyTrend = async ( options?: RequestInit): Promise<MonthlyTrend[]> => {
 
@@ -1686,7 +1049,7 @@ export type GetMonthlyTrendQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Monthly income vs expense trend for the last 6 months
+ * @summary Monthly income vs spend trend for the last 6 months
  */
 
 export function useGetMonthlyTrend<TData = Awaited<ReturnType<typeof getMonthlyTrend>>, TError = ErrorType<unknown>>(
@@ -1723,7 +1086,7 @@ export const getGetBudgetVsActualUrl = (params?: GetBudgetVsActualParams,) => {
 }
 
 /**
- * @summary Budget vs actual spending per category for a given month
+ * @summary Budget targets vs actual spend for the current month
  */
 export const getBudgetVsActual = async (params?: GetBudgetVsActualParams, options?: RequestInit): Promise<BudgetVsActual[]> => {
 
@@ -1770,7 +1133,7 @@ export type GetBudgetVsActualQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Budget vs actual spending per category for a given month
+ * @summary Budget targets vs actual spend for the current month
  */
 
 export function useGetBudgetVsActual<TData = Awaited<ReturnType<typeof getBudgetVsActual>>, TError = ErrorType<unknown>>(

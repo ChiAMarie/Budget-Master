@@ -3,12 +3,12 @@
  * Do not edit manually.
  * Api
  * Personal Budget Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export interface MonthlyTrend {
   month: string;
   income: number;
-  expenses: number;
+  spend: number;
   net: number;
 }

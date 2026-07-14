@@ -3,14 +3,16 @@
  * Do not edit manually.
  * Api
  * Personal Budget Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
-import type { CategoryType } from './categoryType';
 
 export interface Category {
   id: number;
   name: string;
-  type: CategoryType;
-  color: string;
-  icon: string;
+  tier: number;
+  type: string;
+  counts_toward_runrate: boolean;
+  /** @nullable */
+  sort_order?: number | null;
+  created_at?: Date;
 }

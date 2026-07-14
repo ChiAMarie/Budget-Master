@@ -100,3 +100,48 @@ class BudgetTarget(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# BudgetRow — enriched budget target with actual spend
+class BudgetRow(BaseModel):
+    id: int
+    category_id: int
+    category_name: str
+    tier: int
+    scenario: str
+    amount: float
+    actual_spent: float
+
+
+# Summary schemas
+class OverviewSummary(BaseModel):
+    monthly_spend: float
+    monthly_income: float
+    net: float
+    transaction_count: int
+    month: str
+
+
+class CategorySpending(BaseModel):
+    category_id: int
+    category_name: str
+    amount: float
+    percentage: float
+
+
+class MonthlyTrend(BaseModel):
+    month: str
+    income: float
+    spend: float
+    net: float
+
+
+class BudgetVsActual(BaseModel):
+    category_id: int
+    category_name: str
+    tier: int
+    scenario: str
+    budget_limit: float
+    actual_spent: float
+    remaining: float
+    percentage_used: float

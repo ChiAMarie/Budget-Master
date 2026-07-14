@@ -3,220 +3,101 @@
  * Do not edit manually.
  * Api
  * Personal Budget Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 export interface HealthStatus {
   status: string;
 }
 
-export type AccountType = typeof AccountType[keyof typeof AccountType];
-
-
-export const AccountType = {
-  checking: 'checking',
-  savings: 'savings',
-  credit: 'credit',
-  cash: 'cash',
-  investment: 'investment',
-} as const;
-
 export interface Account {
   id: number;
   name: string;
-  type: AccountType;
-  balance: number;
-  currency: string;
+  type: string;
   /** @nullable */
-  color?: string | null;
+  institution?: string | null;
+  /** @nullable */
+  last4?: string | null;
+  active: boolean;
   created_at: string;
 }
 
-export type AccountInputType = typeof AccountInputType[keyof typeof AccountInputType];
-
-
-export const AccountInputType = {
-  checking: 'checking',
-  savings: 'savings',
-  credit: 'credit',
-  cash: 'cash',
-  investment: 'investment',
-} as const;
-
-export interface AccountInput {
-  /** @minLength 1 */
-  name: string;
-  type: AccountInputType;
-  balance: number;
-  currency?: string;
-  color?: string;
-}
-
-export type AccountUpdateType = typeof AccountUpdateType[keyof typeof AccountUpdateType];
-
-
-export const AccountUpdateType = {
-  checking: 'checking',
-  savings: 'savings',
-  credit: 'credit',
-  cash: 'cash',
-  investment: 'investment',
-} as const;
-
 export interface AccountUpdate {
-  /** @minLength 1 */
   name?: string;
-  type?: AccountUpdateType;
-  balance?: number;
-  color?: string;
+  /** @nullable */
+  institution?: string | null;
+  /** @nullable */
+  last4?: string | null;
 }
-
-export type CategoryType = typeof CategoryType[keyof typeof CategoryType];
-
-
-export const CategoryType = {
-  income: 'income',
-  expense: 'expense',
-} as const;
 
 export interface Category {
   id: number;
   name: string;
-  type: CategoryType;
-  color: string;
-  icon: string;
+  tier: number;
+  type: string;
+  counts_toward_runrate: boolean;
+  /** @nullable */
+  sort_order?: number | null;
+  created_at?: string;
 }
-
-export type CategoryInputType = typeof CategoryInputType[keyof typeof CategoryInputType];
-
-
-export const CategoryInputType = {
-  income: 'income',
-  expense: 'expense',
-} as const;
-
-export interface CategoryInput {
-  /** @minLength 1 */
-  name: string;
-  type: CategoryInputType;
-  color?: string;
-  icon?: string;
-}
-
-export interface CategoryUpdate {
-  name?: string;
-  color?: string;
-  icon?: string;
-}
-
-export type TransactionType = typeof TransactionType[keyof typeof TransactionType];
-
-
-export const TransactionType = {
-  income: 'income',
-  expense: 'expense',
-} as const;
 
 export interface Transaction {
   id: number;
   account_id: number;
-  category_id: number;
   /** @nullable */
   account_name?: string | null;
+  txn_date: string;
+  /** @nullable */
+  posted_date?: string | null;
+  description: string;
+  amount: number;
+  flow_type: string;
+  is_pending: boolean;
+  dedup_hash: string;
+  /** @nullable */
+  source_file?: string | null;
+  imported_at: string;
+  /** @nullable */
+  category_id?: number | null;
   /** @nullable */
   category_name?: string | null;
   /** @nullable */
-  category_color?: string | null;
-  /** @nullable */
-  category_icon?: string | null;
-  amount: number;
-  type: TransactionType;
-  description: string;
-  /** @nullable */
-  notes?: string | null;
-  date: string;
-  created_at: string;
+  category_source?: string | null;
 }
 
-export type TransactionInputType = typeof TransactionInputType[keyof typeof TransactionInputType];
-
-
-export const TransactionInputType = {
-  income: 'income',
-  expense: 'expense',
-} as const;
-
-export interface TransactionInput {
-  account_id: number;
+export interface TransactionCategoryInput {
   category_id: number;
-  /** @minimum 0.01 */
-  amount: number;
-  type: TransactionInputType;
-  /** @minLength 1 */
-  description: string;
-  notes?: string;
-  date: string;
 }
 
-export type TransactionUpdateType = typeof TransactionUpdateType[keyof typeof TransactionUpdateType];
-
-
-export const TransactionUpdateType = {
-  income: 'income',
-  expense: 'expense',
-} as const;
-
-export interface TransactionUpdate {
-  account_id?: number;
-  category_id?: number;
-  /** @minimum 0.01 */
-  amount?: number;
-  type?: TransactionUpdateType;
-  description?: string;
-  notes?: string;
-  date?: string;
+export interface TransactionCategory {
+  transaction_id: number;
+  category_id: number;
+  source: string;
+  /** @nullable */
+  rule_id?: number | null;
+  updated_at: string;
 }
 
-export interface Budget {
+export interface BudgetRow {
   id: number;
   category_id: number;
-  /** @nullable */
-  category_name?: string | null;
-  /** @nullable */
-  category_color?: string | null;
-  /** @nullable */
-  category_icon?: string | null;
-  /** YYYY-MM format */
-  month: string;
-  limit_amount: number;
-  spent_amount: number;
-}
-
-export interface BudgetInput {
-  category_id: number;
-  month: string;
-  /** @minimum 0.01 */
-  limit_amount: number;
-}
-
-export interface BudgetUpdate {
-  /** @minimum 0.01 */
-  limit_amount?: number;
+  category_name: string;
+  tier: number;
+  scenario: string;
+  amount: number;
+  actual_spent: number;
 }
 
 export interface OverviewSummary {
-  total_balance: number;
+  monthly_spend: number;
   monthly_income: number;
-  monthly_expenses: number;
-  net_savings: number;
+  net: number;
   transaction_count: number;
-  month?: string;
+  month: string;
 }
 
 export interface CategorySpending {
   category_id: number;
   category_name: string;
-  category_color: string;
-  category_icon: string;
   amount: number;
   percentage: number;
 }
@@ -224,15 +105,15 @@ export interface CategorySpending {
 export interface MonthlyTrend {
   month: string;
   income: number;
-  expenses: number;
+  spend: number;
   net: number;
 }
 
 export interface BudgetVsActual {
   category_id: number;
   category_name: string;
-  category_color: string;
-  category_icon?: string;
+  tier: number;
+  scenario: string;
   budget_limit: number;
   actual_spent: number;
   remaining: number;
@@ -245,13 +126,10 @@ export type ListTransactionsParams = {
  */
 account_id?: number | null;
 /**
+ * Filter by flow type: spend | income | card_payment | transfer | fee | investment | savings
  * @nullable
  */
-category_id?: number | null;
-/**
- * @nullable
- */
-type?: ListTransactionsType;
+flow_type?: string | null;
 /**
  * Filter by month (YYYY-MM)
  * @nullable
@@ -259,20 +137,12 @@ type?: ListTransactionsType;
 month?: string | null;
 };
 
-export type ListTransactionsType = typeof ListTransactionsType[keyof typeof ListTransactionsType] | null;
-
-
-export const ListTransactionsType = {
-  income: 'income',
-  expense: 'expense',
-} as const;
-
 export type ListBudgetsParams = {
 /**
- * Filter by month (YYYY-MM)
+ * month1 or stretch (defaults to month1)
  * @nullable
  */
-month?: string | null;
+scenario?: string | null;
 };
 
 export type GetSummaryOverviewParams = {
@@ -290,6 +160,11 @@ month?: string | null;
 };
 
 export type GetBudgetVsActualParams = {
+/**
+ * month1 or stretch (defaults to month1)
+ * @nullable
+ */
+scenario?: string | null;
 /**
  * @nullable
  */

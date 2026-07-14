@@ -3,13 +3,12 @@
  * Do not edit manually.
  * Api
  * Personal Budget Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 import * as zod from 'zod';
 
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
@@ -18,33 +17,18 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * @summary List all accounts
+ * @summary List all active accounts
  */
 export const ListAccountsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['checking', 'savings', 'credit', 'cash', 'investment']),
-  "balance": zod.number(),
-  "currency": zod.string(),
-  "color": zod.string().nullish(),
+  "type": zod.string(),
+  "institution": zod.string().nullish(),
+  "last4": zod.string().nullish(),
+  "active": zod.boolean(),
   "created_at": zod.coerce.date()
 })
 export const ListAccountsResponse = zod.array(ListAccountsResponseItem)
-
-
-/**
- * @summary Create a new account
- */
-
-export const createAccountBodyCurrencyDefault = `USD`;
-
-export const CreateAccountBody = zod.object({
-  "name": zod.string().min(1),
-  "type": zod.enum(['checking', 'savings', 'credit', 'cash', 'investment']),
-  "balance": zod.number(),
-  "currency": zod.string().default(createAccountBodyCurrencyDefault),
-  "color": zod.string().optional()
-})
 
 
 /**
@@ -57,105 +41,68 @@ export const GetAccountParams = zod.object({
 export const GetAccountResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['checking', 'savings', 'credit', 'cash', 'investment']),
-  "balance": zod.number(),
-  "currency": zod.string(),
-  "color": zod.string().nullish(),
+  "type": zod.string(),
+  "institution": zod.string().nullish(),
+  "last4": zod.string().nullish(),
+  "active": zod.boolean(),
   "created_at": zod.coerce.date()
 })
 
 
 /**
- * @summary Update account
+ * @summary Update editable account fields (name, institution, last4)
  */
 export const UpdateAccountParams = zod.object({
   "id": zod.coerce.number()
 })
 
-
-
-
 export const UpdateAccountBody = zod.object({
-  "name": zod.string().min(1).optional(),
-  "type": zod.enum(['checking', 'savings', 'credit', 'cash', 'investment']).optional(),
-  "balance": zod.number().optional(),
-  "color": zod.string().optional()
+  "name": zod.string().optional(),
+  "institution": zod.string().nullish(),
+  "last4": zod.string().nullish()
 })
 
 export const UpdateAccountResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['checking', 'savings', 'credit', 'cash', 'investment']),
-  "balance": zod.number(),
-  "currency": zod.string(),
-  "color": zod.string().nullish(),
+  "type": zod.string(),
+  "institution": zod.string().nullish(),
+  "last4": zod.string().nullish(),
+  "active": zod.boolean(),
   "created_at": zod.coerce.date()
 })
 
 
 /**
- * @summary Delete account
- */
-export const DeleteAccountParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-
-/**
- * @summary List all categories
+ * @summary List all categories ordered by tier and sort_order
  */
 export const ListCategoriesResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['income', 'expense']),
-  "color": zod.string(),
-  "icon": zod.string()
+  "tier": zod.number(),
+  "type": zod.string(),
+  "counts_toward_runrate": zod.boolean(),
+  "sort_order": zod.number().nullish(),
+  "created_at": zod.coerce.date().optional()
 })
 export const ListCategoriesResponse = zod.array(ListCategoriesResponseItem)
 
 
 /**
- * @summary Create a new category
+ * @summary Get category by ID
  */
-
-export const createCategoryBodyColorDefault = `#6366f1`;
-export const createCategoryBodyIconDefault = `circle`;
-
-export const CreateCategoryBody = zod.object({
-  "name": zod.string().min(1),
-  "type": zod.enum(['income', 'expense']),
-  "color": zod.string().default(createCategoryBodyColorDefault),
-  "icon": zod.string().default(createCategoryBodyIconDefault)
-})
-
-
-/**
- * @summary Update category
- */
-export const UpdateCategoryParams = zod.object({
+export const GetCategoryParams = zod.object({
   "id": zod.coerce.number()
 })
 
-export const UpdateCategoryBody = zod.object({
-  "name": zod.string().optional(),
-  "color": zod.string().optional(),
-  "icon": zod.string().optional()
-})
-
-export const UpdateCategoryResponse = zod.object({
+export const GetCategoryResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['income', 'expense']),
-  "color": zod.string(),
-  "icon": zod.string()
-})
-
-
-/**
- * @summary Delete category
- */
-export const DeleteCategoryParams = zod.object({
-  "id": zod.coerce.number()
+  "tier": zod.number(),
+  "type": zod.string(),
+  "counts_toward_runrate": zod.boolean(),
+  "sort_order": zod.number().nullish(),
+  "created_at": zod.coerce.date().optional()
 })
 
 
@@ -164,46 +111,28 @@ export const DeleteCategoryParams = zod.object({
  */
 export const ListTransactionsQueryParams = zod.object({
   "account_id": zod.coerce.number().nullish(),
-  "category_id": zod.coerce.number().nullish(),
-  "type": zod.union([zod.literal('income'),zod.literal('expense'),zod.literal(null)]).nullish(),
+  "flow_type": zod.coerce.string().nullish().describe('Filter by flow type: spend | income | card_payment | transfer | fee | investment | savings'),
   "month": zod.coerce.string().nullish().describe('Filter by month (YYYY-MM)')
 })
 
 export const ListTransactionsResponseItem = zod.object({
   "id": zod.number(),
   "account_id": zod.number(),
-  "category_id": zod.number(),
   "account_name": zod.string().nullish(),
-  "category_name": zod.string().nullish(),
-  "category_color": zod.string().nullish(),
-  "category_icon": zod.string().nullish(),
-  "amount": zod.number(),
-  "type": zod.enum(['income', 'expense']),
+  "txn_date": zod.coerce.date(),
+  "posted_date": zod.coerce.date().nullish(),
   "description": zod.string(),
-  "notes": zod.string().nullish(),
-  "date": zod.coerce.date(),
-  "created_at": zod.coerce.date()
+  "amount": zod.number(),
+  "flow_type": zod.string(),
+  "is_pending": zod.boolean(),
+  "dedup_hash": zod.string(),
+  "source_file": zod.string().nullish(),
+  "imported_at": zod.coerce.date(),
+  "category_id": zod.number().nullish(),
+  "category_name": zod.string().nullish(),
+  "category_source": zod.string().nullish()
 })
 export const ListTransactionsResponse = zod.array(ListTransactionsResponseItem)
-
-
-/**
- * @summary Create a transaction
- */
-export const createTransactionBodyAmountMin = 0.01;
-
-
-
-
-export const CreateTransactionBody = zod.object({
-  "account_id": zod.number(),
-  "category_id": zod.number(),
-  "amount": zod.number().min(createTransactionBodyAmountMin),
-  "type": zod.enum(['income', 'expense']),
-  "description": zod.string().min(1),
-  "notes": zod.string().optional(),
-  "date": zod.coerce.date()
-})
 
 
 /**
@@ -216,154 +145,79 @@ export const GetTransactionParams = zod.object({
 export const GetTransactionResponse = zod.object({
   "id": zod.number(),
   "account_id": zod.number(),
-  "category_id": zod.number(),
   "account_name": zod.string().nullish(),
-  "category_name": zod.string().nullish(),
-  "category_color": zod.string().nullish(),
-  "category_icon": zod.string().nullish(),
-  "amount": zod.number(),
-  "type": zod.enum(['income', 'expense']),
+  "txn_date": zod.coerce.date(),
+  "posted_date": zod.coerce.date().nullish(),
   "description": zod.string(),
-  "notes": zod.string().nullish(),
-  "date": zod.coerce.date(),
-  "created_at": zod.coerce.date()
+  "amount": zod.number(),
+  "flow_type": zod.string(),
+  "is_pending": zod.boolean(),
+  "dedup_hash": zod.string(),
+  "source_file": zod.string().nullish(),
+  "imported_at": zod.coerce.date(),
+  "category_id": zod.number().nullish(),
+  "category_name": zod.string().nullish(),
+  "category_source": zod.string().nullish()
 })
 
 
 /**
- * @summary Update a transaction
+ * @summary Set or update the category for a transaction (the only permitted transaction mutation)
  */
-export const UpdateTransactionParams = zod.object({
+export const RecategorizeTransactionParams = zod.object({
   "id": zod.coerce.number()
 })
 
-export const updateTransactionBodyAmountMin = 0.01;
-
-
-
-export const UpdateTransactionBody = zod.object({
-  "account_id": zod.number().optional(),
-  "category_id": zod.number().optional(),
-  "amount": zod.number().min(updateTransactionBodyAmountMin).optional(),
-  "type": zod.enum(['income', 'expense']).optional(),
-  "description": zod.string().optional(),
-  "notes": zod.string().optional(),
-  "date": zod.coerce.date().optional()
+export const RecategorizeTransactionBody = zod.object({
+  "category_id": zod.number()
 })
 
-export const UpdateTransactionResponse = zod.object({
-  "id": zod.number(),
-  "account_id": zod.number(),
+export const RecategorizeTransactionResponse = zod.object({
+  "transaction_id": zod.number(),
   "category_id": zod.number(),
-  "account_name": zod.string().nullish(),
-  "category_name": zod.string().nullish(),
-  "category_color": zod.string().nullish(),
-  "category_icon": zod.string().nullish(),
-  "amount": zod.number(),
-  "type": zod.enum(['income', 'expense']),
-  "description": zod.string(),
-  "notes": zod.string().nullish(),
-  "date": zod.coerce.date(),
-  "created_at": zod.coerce.date()
+  "source": zod.string(),
+  "rule_id": zod.number().nullish(),
+  "updated_at": zod.coerce.date()
 })
 
 
 /**
- * @summary Delete a transaction
- */
-export const DeleteTransactionParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-
-/**
- * @summary List all budgets
+ * @summary List budget targets for a scenario with actual spend for the current calendar month
  */
 export const ListBudgetsQueryParams = zod.object({
-  "month": zod.coerce.string().nullish().describe('Filter by month (YYYY-MM)')
+  "scenario": zod.coerce.string().nullish().describe('month1 or stretch (defaults to month1)')
 })
 
 export const ListBudgetsResponseItem = zod.object({
   "id": zod.number(),
   "category_id": zod.number(),
-  "category_name": zod.string().nullish(),
-  "category_color": zod.string().nullish(),
-  "category_icon": zod.string().nullish(),
-  "month": zod.string().describe('YYYY-MM format'),
-  "limit_amount": zod.number(),
-  "spent_amount": zod.number()
+  "category_name": zod.string(),
+  "tier": zod.number(),
+  "scenario": zod.string(),
+  "amount": zod.number(),
+  "actual_spent": zod.number()
 })
 export const ListBudgetsResponse = zod.array(ListBudgetsResponseItem)
 
 
 /**
- * @summary Create or update a budget for a category/month
- */
-export const createBudgetBodyLimitAmountMin = 0.01;
-
-
-
-export const CreateBudgetBody = zod.object({
-  "category_id": zod.number(),
-  "month": zod.string(),
-  "limit_amount": zod.number().min(createBudgetBodyLimitAmountMin)
-})
-
-
-/**
- * @summary Update a budget limit
- */
-export const UpdateBudgetParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const updateBudgetBodyLimitAmountMin = 0.01;
-
-
-
-export const UpdateBudgetBody = zod.object({
-  "limit_amount": zod.number().min(updateBudgetBodyLimitAmountMin).optional()
-})
-
-export const UpdateBudgetResponse = zod.object({
-  "id": zod.number(),
-  "category_id": zod.number(),
-  "category_name": zod.string().nullish(),
-  "category_color": zod.string().nullish(),
-  "category_icon": zod.string().nullish(),
-  "month": zod.string().describe('YYYY-MM format'),
-  "limit_amount": zod.number(),
-  "spent_amount": zod.number()
-})
-
-
-/**
- * @summary Delete a budget
- */
-export const DeleteBudgetParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-
-/**
- * @summary Dashboard overview — total balance, income, expenses for current month
+ * @summary Monthly spend (flow_type=spend) and income (flow_type=income) totals
  */
 export const GetSummaryOverviewQueryParams = zod.object({
   "month": zod.coerce.string().nullish()
 })
 
 export const GetSummaryOverviewResponse = zod.object({
-  "total_balance": zod.number(),
+  "monthly_spend": zod.number(),
   "monthly_income": zod.number(),
-  "monthly_expenses": zod.number(),
-  "net_savings": zod.number(),
+  "net": zod.number(),
   "transaction_count": zod.number(),
-  "month": zod.string().optional()
+  "month": zod.string()
 })
 
 
 /**
- * @summary Spending breakdown by category for a given month
+ * @summary Spend breakdown by category (flow_type=spend) for a given month
  */
 export const GetSpendingByCategoryQueryParams = zod.object({
   "month": zod.coerce.string().nullish()
@@ -372,8 +226,6 @@ export const GetSpendingByCategoryQueryParams = zod.object({
 export const GetSpendingByCategoryResponseItem = zod.object({
   "category_id": zod.number(),
   "category_name": zod.string(),
-  "category_color": zod.string(),
-  "category_icon": zod.string(),
   "amount": zod.number(),
   "percentage": zod.number()
 })
@@ -381,29 +233,30 @@ export const GetSpendingByCategoryResponse = zod.array(GetSpendingByCategoryResp
 
 
 /**
- * @summary Monthly income vs expense trend for the last 6 months
+ * @summary Monthly income vs spend trend for the last 6 months
  */
 export const GetMonthlyTrendResponseItem = zod.object({
   "month": zod.string(),
   "income": zod.number(),
-  "expenses": zod.number(),
+  "spend": zod.number(),
   "net": zod.number()
 })
 export const GetMonthlyTrendResponse = zod.array(GetMonthlyTrendResponseItem)
 
 
 /**
- * @summary Budget vs actual spending per category for a given month
+ * @summary Budget targets vs actual spend for the current month
  */
 export const GetBudgetVsActualQueryParams = zod.object({
+  "scenario": zod.coerce.string().nullish().describe('month1 or stretch (defaults to month1)'),
   "month": zod.coerce.string().nullish()
 })
 
 export const GetBudgetVsActualResponseItem = zod.object({
   "category_id": zod.number(),
   "category_name": zod.string(),
-  "category_color": zod.string(),
-  "category_icon": zod.string().optional(),
+  "tier": zod.number(),
+  "scenario": zod.string(),
   "budget_limit": zod.number(),
   "actual_spent": zod.number(),
   "remaining": zod.number(),

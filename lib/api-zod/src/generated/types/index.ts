@@ -3,37 +3,23 @@
  * Do not edit manually.
  * Api
  * Personal Budget Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
 
 export * from './account';
-export * from './accountInput';
-export * from './accountInputType';
-export * from './accountType';
 export * from './accountUpdate';
-export * from './accountUpdateType';
-export * from './budget';
-export * from './budgetInput';
-export * from './budgetUpdate';
+export * from './budgetRow';
 export * from './budgetVsActual';
 export * from './category';
-export * from './categoryInput';
-export * from './categoryInputType';
 export * from './categorySpending';
-export * from './categoryType';
-export * from './categoryUpdate';
 export * from './getBudgetVsActualParams';
 export * from './getSpendingByCategoryParams';
 export * from './getSummaryOverviewParams';
 export * from './healthStatus';
 export * from './listBudgetsParams';
 export * from './listTransactionsParams';
-export * from './listTransactionsType';
 export * from './monthlyTrend';
 export * from './overviewSummary';
 export * from './transaction';
-export * from './transactionInput';
-export * from './transactionInputType';
-export * from './transactionType';
-export * from './transactionUpdate';
-export * from './transactionUpdateType';
+export * from './transactionCategory';
+export * from './transactionCategoryInput';

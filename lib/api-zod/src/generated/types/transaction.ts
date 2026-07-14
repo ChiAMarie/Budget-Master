@@ -3,27 +3,29 @@
  * Do not edit manually.
  * Api
  * Personal Budget Tracker API
- * OpenAPI spec version: 0.1.0
+ * OpenAPI spec version: 0.2.0
  */
-import type { TransactionType } from './transactionType';
 
 export interface Transaction {
   id: number;
   account_id: number;
-  category_id: number;
   /** @nullable */
   account_name?: string | null;
+  txn_date: Date;
+  /** @nullable */
+  posted_date?: Date | null;
+  description: string;
+  amount: number;
+  flow_type: string;
+  is_pending: boolean;
+  dedup_hash: string;
+  /** @nullable */
+  source_file?: string | null;
+  imported_at: Date;
+  /** @nullable */
+  category_id?: number | null;
   /** @nullable */
   category_name?: string | null;
   /** @nullable */
-  category_color?: string | null;
-  /** @nullable */
-  category_icon?: string | null;
-  amount: number;
-  type: TransactionType;
-  description: string;
-  /** @nullable */
-  notes?: string | null;
-  date: Date;
-  created_at: Date;
+  category_source?: string | null;
 }

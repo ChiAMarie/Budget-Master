@@ -6,9 +6,11 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface CategorySpending {
+export interface TransactionCategory {
+  transaction_id: number;
   category_id: number;
-  category_name: string;
-  amount: number;
-  percentage: number;
+  source: string;
+  /** @nullable */
+  rule_id?: number | null;
+  updated_at: Date;
 }

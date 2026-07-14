@@ -6,13 +6,12 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface BudgetVsActual {
+export interface BudgetRow {
+  id: number;
   category_id: number;
   category_name: string;
   tier: number;
   scenario: string;
-  budget_limit: number;
+  amount: number;
   actual_spent: number;
-  remaining: number;
-  percentage_used: number;
 }

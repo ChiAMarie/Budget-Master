@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
+  version: 0.2.0
   description: Personal Budget Tracker API
 servers:
   - url: /api
@@ -11,22 +11,22 @@ tags:
   - name: health
     description: Health operations
   - name: accounts
-    description: Budget accounts
+    description: Source accounts
   - name: transactions
-    description: Financial transactions
+    description: Immutable transaction ledger
   - name: categories
-    description: Transaction categories
+    description: Spending taxonomy
   - name: budgets
-    description: Budget limits per category
+    description: Budget targets per scenario
   - name: summary
     description: Dashboard summaries
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -39,7 +39,7 @@ paths:
     get:
       operationId: listAccounts
       tags: [accounts]
-      summary: List all accounts
+      summary: List all active accounts
       responses:
         "200":
           description: List of accounts
@@ -49,23 +49,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Account"
-    post:
-      operationId: createAccount
-      tags: [accounts]
-      summary: Create a new account
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AccountInput"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Account"
 
   /accounts/{id}:
     get:
@@ -90,7 +73,7 @@ paths:
     patch:
       operationId: updateAccount
       tags: [accounts]
-      summary: Update account
+      summary: Update editable account fields (name, institution, last4)
       parameters:
         - name: id
           in: path
@@ -112,27 +95,12 @@ paths:
                 $ref: "#/components/schemas/Account"
         "404":
           description: Not found
-    delete:
-      operationId: deleteAccount
-      tags: [accounts]
-      summary: Delete account
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Deleted
-        "404":
-          description: Not found
 
   /categories:
     get:
       operationId: listCategories
       tags: [categories]
-      summary: List all categories
+      summary: List all categories ordered by tier and sort_order
       responses:
         "200":
           description: List of categories
@@ -142,61 +110,27 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Category"
-    post:
-      operationId: createCategory
-      tags: [categories]
-      summary: Create a new category
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CategoryInput"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Category"
 
   /categories/{id}:
-    patch:
-      operationId: updateCategory
+    get:
+      operationId: getCategory
       tags: [categories]
-      summary: Update category
+      summary: Get category by ID
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CategoryUpdate"
       responses:
         "200":
-          description: Updated category
+          description: Category
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Category"
-    delete:
-      operationId: deleteCategory
-      tags: [categories]
-      summary: Delete category
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Deleted
+        "404":
+          description: Not found
 
   /transactions:
     get:
@@ -209,17 +143,12 @@ paths:
           required: false
           schema:
             type: ["integer", "null"]
-        - name: category_id
+        - name: flow_type
           in: query
           required: false
-          schema:
-            type: ["integer", "null"]
-        - name: type
-          in: query
-          required: false
+          description: "Filter by flow type: spend | income | card_payment | transfer | fee | investment | savings"
           schema:
             type: ["string", "null"]
-            enum: [income, expense, null]
         - name: month
           in: query
           required: false
@@ -235,23 +164,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Transaction"
-    post:
-      operationId: createTransaction
-      tags: [transactions]
-      summary: Create a transaction
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TransactionInput"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Transaction"
 
   /transactions/{id}:
     get:
@@ -273,10 +185,12 @@ paths:
                 $ref: "#/components/schemas/Transaction"
         "404":
           description: Not found
+
+  /transactions/{id}/category:
     patch:
-      operationId: updateTransaction
+      operationId: recategorizeTransaction
       tags: [transactions]
-      summary: Update a transaction
+      summary: Set or update the category for a transaction (the only permitted transaction mutation)
       parameters:
         - name: id
           in: path
@@ -288,114 +202,44 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TransactionUpdate"
+              $ref: "#/components/schemas/TransactionCategoryInput"
       responses:
         "200":
-          description: Updated transaction
+          description: Updated transaction_category row
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Transaction"
+                $ref: "#/components/schemas/TransactionCategory"
         "404":
-          description: Not found
-    delete:
-      operationId: deleteTransaction
-      tags: [transactions]
-      summary: Delete a transaction
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Deleted
-        "404":
-          description: Not found
+          description: Transaction not found
 
   /budgets:
     get:
       operationId: listBudgets
       tags: [budgets]
-      summary: List all budgets
+      summary: List budget targets for a scenario with actual spend for the current calendar month
       parameters:
-        - name: month
+        - name: scenario
           in: query
           required: false
-          description: "Filter by month (YYYY-MM)"
+          description: "month1 or stretch (defaults to month1)"
           schema:
             type: ["string", "null"]
       responses:
         "200":
-          description: List of budgets
+          description: Budget rows with actual spend
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Budget"
-    post:
-      operationId: createBudget
-      tags: [budgets]
-      summary: Create or update a budget for a category/month
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/BudgetInput"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Budget"
-
-  /budgets/{id}:
-    patch:
-      operationId: updateBudget
-      tags: [budgets]
-      summary: Update a budget limit
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/BudgetUpdate"
-      responses:
-        "200":
-          description: Updated budget
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Budget"
-    delete:
-      operationId: deleteBudget
-      tags: [budgets]
-      summary: Delete a budget
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Deleted
+                  $ref: "#/components/schemas/BudgetRow"
 
   /summary/overview:
     get:
       operationId: getSummaryOverview
       tags: [summary]
-      summary: Dashboard overview — total balance, income, expenses for current month
+      summary: Monthly spend (flow_type=spend) and income (flow_type=income) totals
       parameters:
         - name: month
           in: query
@@ -414,7 +258,7 @@ paths:
     get:
       operationId: getSpendingByCategory
       tags: [summary]
-      summary: Spending breakdown by category for a given month
+      summary: Spend breakdown by category (flow_type=spend) for a given month
       parameters:
         - name: month
           in: query
@@ -435,7 +279,7 @@ paths:
     get:
       operationId: getMonthlyTrend
       tags: [summary]
-      summary: Monthly income vs expense trend for the last 6 months
+      summary: Monthly income vs spend trend for the last 6 months
       responses:
         "200":
           description: Monthly trend data
@@ -450,8 +294,14 @@ paths:
     get:
       operationId: getBudgetVsActual
       tags: [summary]
-      summary: Budget vs actual spending per category for a given month
+      summary: Budget targets vs actual spend for the current month
       parameters:
+        - name: scenario
+          in: query
+          required: false
+          description: "month1 or stretch (defaults to month1)"
+          schema:
+            type: ["string", "null"]
         - name: month
           in: query
           required: false
@@ -479,166 +329,119 @@ components:
 
     Account:
       type: object
-      required: [id, name, type, balance, currency, created_at]
+      required: [id, name, type, active, created_at]
       properties:
         id: { type: integer }
         name: { type: string }
-        type: { type: string, enum: [checking, savings, credit, cash, investment] }
-        balance: { type: number }
-        currency: { type: string }
-        color: { type: ["string", "null"] }
+        type: { type: string }
+        institution: { type: ["string", "null"] }
+        last4: { type: ["string", "null"] }
+        active: { type: boolean }
         created_at: { type: string, format: date-time }
-
-    AccountInput:
-      type: object
-      required: [name, type, balance]
-      properties:
-        name: { type: string, minLength: 1 }
-        type: { type: string, enum: [checking, savings, credit, cash, investment] }
-        balance: { type: number }
-        currency: { type: string, default: USD }
-        color: { type: string }
 
     AccountUpdate:
       type: object
       properties:
-        name: { type: string, minLength: 1 }
-        type: { type: string, enum: [checking, savings, credit, cash, investment] }
-        balance: { type: number }
-        color: { type: string }
+        name: { type: string }
+        institution: { type: ["string", "null"] }
+        last4: { type: ["string", "null"] }
 
     Category:
       type: object
-      required: [id, name, type, color, icon]
+      required: [id, name, tier, type, counts_toward_runrate]
       properties:
         id: { type: integer }
         name: { type: string }
-        type: { type: string, enum: [income, expense] }
-        color: { type: string }
-        icon: { type: string }
-
-    CategoryInput:
-      type: object
-      required: [name, type]
-      properties:
-        name: { type: string, minLength: 1 }
-        type: { type: string, enum: [income, expense] }
-        color: { type: string, default: "#6366f1" }
-        icon: { type: string, default: "circle" }
-
-    CategoryUpdate:
-      type: object
-      properties:
-        name: { type: string }
-        color: { type: string }
-        icon: { type: string }
+        tier: { type: integer }
+        type: { type: string }
+        counts_toward_runrate: { type: boolean }
+        sort_order: { type: ["integer", "null"] }
+        created_at: { type: string, format: date-time }
 
     Transaction:
       type: object
-      required: [id, account_id, category_id, amount, type, description, date, created_at]
+      required: [id, account_id, txn_date, description, amount, flow_type, is_pending, dedup_hash, imported_at]
       properties:
         id: { type: integer }
         account_id: { type: integer }
-        category_id: { type: integer }
         account_name: { type: ["string", "null"] }
-        category_name: { type: ["string", "null"] }
-        category_color: { type: ["string", "null"] }
-        category_icon: { type: ["string", "null"] }
+        txn_date: { type: string, format: date }
+        posted_date: { type: ["string", "null"], format: date }
+        description: { type: string }
         amount: { type: number }
-        type: { type: string, enum: [income, expense] }
-        description: { type: string }
-        notes: { type: ["string", "null"] }
-        date: { type: string, format: date }
-        created_at: { type: string, format: date-time }
+        flow_type: { type: string }
+        is_pending: { type: boolean }
+        dedup_hash: { type: string }
+        source_file: { type: ["string", "null"] }
+        imported_at: { type: string, format: date-time }
+        category_id: { type: ["integer", "null"] }
+        category_name: { type: ["string", "null"] }
+        category_source: { type: ["string", "null"] }
 
-    TransactionInput:
+    TransactionCategoryInput:
       type: object
-      required: [account_id, category_id, amount, type, description, date]
+      required: [category_id]
       properties:
-        account_id: { type: integer }
         category_id: { type: integer }
-        amount: { type: number, minimum: 0.01 }
-        type: { type: string, enum: [income, expense] }
-        description: { type: string, minLength: 1 }
-        notes: { type: string }
-        date: { type: string, format: date }
 
-    TransactionUpdate:
+    TransactionCategory:
       type: object
+      required: [transaction_id, category_id, source, updated_at]
       properties:
-        account_id: { type: integer }
+        transaction_id: { type: integer }
         category_id: { type: integer }
-        amount: { type: number, minimum: 0.01 }
-        type: { type: string, enum: [income, expense] }
-        description: { type: string }
-        notes: { type: string }
-        date: { type: string, format: date }
+        source: { type: string }
+        rule_id: { type: ["integer", "null"] }
+        updated_at: { type: string, format: date-time }
 
-    Budget:
+    BudgetRow:
       type: object
-      required: [id, category_id, month, limit_amount, spent_amount]
+      required: [id, category_id, category_name, tier, scenario, amount, actual_spent]
       properties:
         id: { type: integer }
         category_id: { type: integer }
-        category_name: { type: ["string", "null"] }
-        category_color: { type: ["string", "null"] }
-        category_icon: { type: ["string", "null"] }
-        month: { type: string, description: "YYYY-MM format" }
-        limit_amount: { type: number }
-        spent_amount: { type: number }
-
-    BudgetInput:
-      type: object
-      required: [category_id, month, limit_amount]
-      properties:
-        category_id: { type: integer }
-        month: { type: string }
-        limit_amount: { type: number, minimum: 0.01 }
-
-    BudgetUpdate:
-      type: object
-      properties:
-        limit_amount: { type: number, minimum: 0.01 }
+        category_name: { type: string }
+        tier: { type: integer }
+        scenario: { type: string }
+        amount: { type: number }
+        actual_spent: { type: number }
 
     OverviewSummary:
       type: object
-      required: [total_balance, monthly_income, monthly_expenses, net_savings, transaction_count]
+      required: [monthly_spend, monthly_income, net, transaction_count, month]
       properties:
-        total_balance: { type: number }
+        monthly_spend: { type: number }
         monthly_income: { type: number }
-        monthly_expenses: { type: number }
-        net_savings: { type: number }
+        net: { type: number }
         transaction_count: { type: integer }
         month: { type: string }
 
     CategorySpending:
       type: object
-      required: [category_id, category_name, category_color, category_icon, amount, percentage]
+      required: [category_id, category_name, amount, percentage]
       properties:
         category_id: { type: integer }
         category_name: { type: string }
-        category_color: { type: string }
-        category_icon: { type: string }
         amount: { type: number }
         percentage: { type: number }
 
     MonthlyTrend:
       type: object
-      required: [month, income, expenses, net]
+      required: [month, income, spend, net]
       properties:
         month: { type: string }
         income: { type: number }
-        expenses: { type: number }
+        spend: { type: number }
         net: { type: number }
 
     BudgetVsActual:
       type: object
-      required: [category_id, category_name, category_color, budget_limit, actual_spent, remaining, percentage_used]
+      required: [category_id, category_name, tier, scenario, budget_limit, actual_spent, remaining, percentage_used]
       properties:
         category_id: { type: integer }
         category_name: { type: string }
-        category_color: { type: string }
-        category_icon: { type: string }
+        tier: { type: integer }
+        scenario: { type: string }
         budget_limit: { type: number }
         actual_spent: { type: number }
         remaining: { type: number }
